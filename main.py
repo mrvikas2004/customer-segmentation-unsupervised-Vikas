@@ -62,7 +62,7 @@ def main():
 
     # K-Means
     print("\n→ K-Means")
-    km_search = find_optimal_k(X_pca_95)
+    km_search = find_optimal_k(X_pca_95, min_business_k=3)  # ← add min_business_k=3
     OPTIMAL_K = km_search['best_k']
     km_labels, _ = train_kmeans(X_pca_95, OPTIMAL_K)
     results.append(score_model(X_pca_95, km_labels, f'K-Means (K={OPTIMAL_K})'))

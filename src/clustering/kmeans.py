@@ -8,9 +8,12 @@ from sklearn.metrics import silhouette_score, davies_bouldin_score
 
 def find_optimal_k(X: np.ndarray,
                    k_range: range = range(2, 12),
+                   min_business_k: int = 3,
                    random_state: int = 42) -> dict:
     """
     Compute inertia, silhouette, and DBI for each K.
+    Uses business-constrained selection — ignores K < min_business_k
+    for final recommendation since K=2 is rarely actionable.
 
     Returns dict with keys: inertias, silhouettes, dbis, best_k
     """
@@ -29,15 +32,24 @@ def find_optimal_k(X: np.ndarray,
         print(f"  K={k:2d}  Inertia={km.inertia_:>12,.0f}  "
               f"Silhouette={sil:.4f}  DBI={dbi:.4f}")
 
-    best_k = list(k_range)[int(np.argmax(silhouettes))]
-    print(f"\n  Best K (max silhouette) = {best_k}")
+    k_list = list(k_range)
+
+    # Business-constrained: only consider K >= min_business_k
+    business_sils = [
+        (sil, k) for sil, k in zip(silhouettes, k_list)
+        if k >= min_business_k
+    ]
+    best_k = max(business_sils, key=lambda x: x[0])[1]
+
+    print(f"\n  Best K overall (any K)        = {k_list[int(np.argmax(silhouettes))]}")
+    print(f"  Best K (business K>={min_business_k}) = {best_k}  ← used for segmentation")
 
     return {
         'inertias'    : inertias,
         'silhouettes' : silhouettes,
         'dbis'        : dbis,
         'best_k'      : best_k,
-        'k_range'     : list(k_range),
+        'k_range'     : k_list,
     }
 
 
